@@ -85,9 +85,19 @@
                         <input type="file" onchange={handleFileSelect} accept=".csv" />
                     </div>
                     <div class="button-container">
-                        <button class="selectbutton" type="submit" onclick={parseCSV}>Map Fields</button>
+                        <button class="selectbutton" type="submit" onclick={mapFields}>Map Fields</button>
                     </div>
                 </div>
+                <div class="div1" ondrop={handleDrop} ondragover={handleDragOver}>
+                </div>
+                <ul>
+                    <template for:each={listOfFields} for:item="item">
+                        <li key={item.id} draggable={isDraggable} ondragstart={handleDragStart}
+                            ondragover={handleDragOver} ondragend={handleDragEnd} data-item={item.id}>
+                            {item.value}
+                        </li>
+                    </template>
+                </ul>
             </div>
         </div>
     </template>

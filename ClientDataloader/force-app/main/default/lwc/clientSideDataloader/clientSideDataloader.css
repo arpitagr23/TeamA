@@ -118,3 +118,10 @@ button:hover {
     box-sizing: border-box;
     /* include padding in the height and width */
 }
+
+.div1{
+    width: 350px;
+    height: 70px;
+    padding: 10px;
+    border: 1px solid black;
+}

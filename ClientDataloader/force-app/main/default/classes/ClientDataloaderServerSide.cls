@@ -1,27 +1,6 @@
 public with sharing class ClientDataloaderServerSide {
-    private static String parseAccessToken(String responseBody){
-        /*
-            {
-            "access_token":"SESSION_ID_REMOVED",
-            "instance_url":"https://empathetic-hawk-ejdohv-dev-ed.trailblaze.my.salesforce.com",
-            "id":"https://login.salesforce.com/id/00D5h000007d3wlEAA/0055h000007XtxpAAC",
-            "token_type":"Bearer",
-            "issued_at":"1668660012411",
-            "signature":"8TdlFFQ/2HMit16DwYOYA/34lqbjp33dPyw97WiO+SM="
-            }        
-        */
-        String accessTokenValue;
-        JSONParser parser = JSON.createParser(responseBody);
-        while(parser.nextToken() != null){
-            if((parser.getCurrentToken() == JSONToken.FIELD_NAME ) && (parser.getText() == 'access_token')){
-                system.debug('ACCESS_TOKEN :INSIDE ');
-                parser.nextToken();
-                accessTokenValue = parser.getText();
-            }
-        }
-        System.debug(accessTokenValue);
-        return accessTokenValue;
-    }
+
+    public class CommonException extends Exception {}
 
     @AuraEnabled(cacheable=true)
     public static String doCallout(String username, String password, String sectoken, String endpoint){
@@ -51,16 +30,27 @@ public with sharing class ClientDataloaderServerSide {
             System.debug(response.getStatusCode());
             System.debug(responseString);
             if(response.getStatusCode()==200){
-                acc = parseAccessToken(responseString);
-                System.debug(acc);
+                Map<String, Object> authResult = (Map<String, Object>)JSON.deserializeUntyped(response.getBody());
+                acc = (String)authResult.get('access_token');
+                String instanceUrl = (String)authResult.get('instance_url');
+                instanceUrl = instanceUrl + '/';
+                if(!instanceUrl.equalsIgnoreCase(endpoint)){
+                    throw new CommonException('Endpoint Incorrect');
+                }
             }
-            else {
-                throw new AuraHandledException('Auth Failure');
+            else{
+                throw new CommonException('Authentication Failure, Please Check Your Login Details');
             }
         }
-        catch(Exception ex){
+        catch(CommonException e){
             Map<String, Object> error = new Map<String, Object>();
-            error.put('message', 'Callout Error: ' + ex.getMessage());
+            error.put('message', e.getMessage());
+            System.debug(error);
+            throw new AuraHandledException(JSON.serialize(error));
+        }
+        catch(Exception e){
+            Map<String, Object> error = new Map<String, Object>();
+            error.put('message', e.getMessage());
             throw new AuraHandledException(JSON.serialize(error));
         }
         return acc;
@@ -109,14 +99,13 @@ public with sharing class ClientDataloaderServerSide {
         {
             Map<String,Object> fieldNames = (Map<String,Object>)fieldInfo.get(i);
             String fieldName = String.valueOf(fieldNames.get('name'));
-            if(fieldName.equalsIgnoreCase('id'))
-                continue;
             fieldList.add(fieldName);
 
         }
         return fieldList;
     }
 
+    /*
     @AuraEnabled(cacheable=true)
     public static Map<String, List<String>> fieldsDML(String accessToken, String endpoint, String objName)
     {
@@ -153,5 +142,6 @@ public with sharing class ClientDataloaderServerSide {
         System.debug(fieldList);
         return fieldList;
     }
+    */
     
 }

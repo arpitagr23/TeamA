@@ -4,15 +4,15 @@ import doCallout from '@salesforce/apex/ClientDataloaderServerSide.doCallout'
 import getObjectList from '@salesforce/apex/ClientDataloaderServerSide.getObjectList'
 import { ShowToastEvent } from 'lightning/platformShowToastEvent';
 import fieldsList from '@salesforce/apex/ClientDataloaderServerSide.fieldsList'
-import fieldsDML from '@salesforce/apex/ClientDataloaderServerSide.fieldsDML';
 
 export default class ClientSideDataloader extends LightningElement {
 
     imgavatar2 = img_avatar2;
-    accessToken; endpoint; sObject; fileDetails; fieldFromCSV; myMap; 
+    accessToken; endpoint; sObject; fileDetails; fieldFromCSV; myMap;
     finalQuery = '';
-    listOfObjects = []; listOfFields = []; selectedFields = []; tableData = []; tableColumns = [];     mapData = []; mapColumns = []; mapTableData = [];
+    listOfObjects = []; listOfFields = []; selectedFields = []; mapData = [];
     isLoggedIn = false; isShowForm = true; isQuery = false; isShowFields = false; showQuery = false; isInsert = false;
+    draggedField = null;
 
     authlogin(event) {
         let username = this.template.querySelector('[data-id="uname"]').value;
@@ -32,14 +32,15 @@ export default class ClientSideDataloader extends LightningElement {
             this.isLoggedIn = true;
             this.isShowForm = false;
         }).catch(error => {
+            let errorMessage = JSON.parse(error.body.message).message;
             this.dispatchEvent(
                 new ShowToastEvent({
                     title: 'Error',
-                    message: 'Authentication failure, Please check your details again',
+                    message: errorMessage,
                     variant: 'error',
                 }),
             );
-        })
+        });
     }
 
     makeQuery() {
@@ -61,6 +62,7 @@ export default class ClientSideDataloader extends LightningElement {
 
     generateFields() {
         fieldsList({ accessToken: this.accessToken, endpoint: this.endpoint, objName: this.sObject }).then((result) => {
+            this.listOfFields = [];
             this.listOfFields = result;
             this.isShowFields = true;
             console.log(result);
@@ -72,7 +74,7 @@ export default class ClientSideDataloader extends LightningElement {
     selectFields(event) {
         this.selectedFields = Array.from(event.target.selectedOptions, option => option.value);
 
-        let queryGen = 'SELECT Id, ';
+        let queryGen = 'SELECT ';
         for (let i = 0; i < this.selectedFields.length; i++) {
             let fieldValue = this.selectedFields[i];
             queryGen += fieldValue + ' ,';
@@ -115,6 +117,7 @@ export default class ClientSideDataloader extends LightningElement {
 
                 const rows = fileContents.split('\n').map(row => row.trim());
                 const headers = rows[0].trim().split(',');
+                let res = headers.map(item => ({ 'value': item, 'label': item }));
                 this.fieldFromCSV = headers;
 
                 let data = rows.slice(1).filter(row => row !== ''); // remove empty rows
@@ -144,39 +147,58 @@ export default class ClientSideDataloader extends LightningElement {
         }
     }
 
-    parseCSV() {
-        fieldsDML({ accessToken: this.accessToken, endpoint: this.endpoint, objName: this.sObject })
-            .then((result) => {
-                this.myMap = result;
-                this.mapColumns = [];
-                this.mapData = [];
-                let jsMap = {};
-                for (let key of Object.keys(this.myMap)) {
-                    jsMap[key] = this.myMap[key];
-                    this.mapColumns.push(key);
-                    this.mapData.push(jsMap[key]);
-                }
-               
-                console.log(JSON.stringify(this.mapColumns));
-                console.log(JSON.stringify(this.mapData));
-            })
-            .catch((error) => {
-                console.error(error);
-            });
+    mapFields() {
+        fieldsList({ accessToken: this.accessToken, endpoint: this.endpoint, objName: this.sObject }).then((result) => {
+            this.listOfFields = [];
+            let res = result.map(item => ({ 'value': item, 'label': item }));
+            this.listOfFields = res;
+        }).catch(error => {
+
+        })
     }
 
-    connectedCallback() {
-        this.generateTableData();
+    isDraggable = true;
+
+    handleDragStart(event) {
+        // Set the data to be transferred
+        event.dataTransfer.setData('text/plain', event.target.dataset.id);
+        const val = event.target.dataset.id;
+        console.log(val);
+        // Set the draggable property to false to prevent dragging more than one item at a time
+        this.isDraggable = false;
     }
 
-    generateTableData() {
-        for (let i = 0; i < this.mapData.length; i++) {
-            let row = [];
-            for (let j = 0; j < this.mapColumns.length; j++) {
-                let value = this.mapData[i][j];
-                row.push(value);
-            }
-            this.mapTableData.push(row);
-        }
+    handleDragOver(event) {
+        // Prevent default to allow drop
+        event.preventDefault();
     }
+
+    handleDragEnd(event) {
+        // Set the draggable property back to true after the drag is complete
+        this.isDraggable = true;
+    }
+
+    handleDragOver(event) {
+        // Prevent default to allow drop
+        event.preventDefault();
+    }
+
+    handleDrop(event) {
+        // Prevent default to allow drop
+        event.preventDefault();
+        // Get the data that was transferred
+        const data = event.dataTransfer.getData('item_id');
+        console.log(data);
+      
+        // Find the source element by using the event target instead of querySelector
+        const sourceElement = event.target;
+        // Find the target element
+        const targetElement = event.currentTarget;
+        console.log(targetElement);
+      
+        // Move the source element to the target element
+        targetElement.appendChild(sourceElement);
+        console.log(targetElement);
+    }
+
 }
