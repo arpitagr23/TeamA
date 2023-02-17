@@ -1,0 +1,120 @@
+.container {
+    padding: 16px;
+}
+
+.selectcontainer {
+    padding: 2px;
+}
+
+input[type=text],
+input[type=password],
+input[type=url] {
+    width: 100%;
+    padding: 12px 5px;
+    margin: 8px 0;
+    display: inline-block;
+    border: 1px solid #ccc;
+    box-sizing: border-box;
+}
+
+.imgcontainer {
+    text-align: center;
+    margin: 12px 0 6px 0;
+}
+
+img.avatar {
+    width: 20%;
+    border-radius: 50%;
+}
+
+.box {
+    background-color: white;
+    width: 600px;
+    border: 15px solid #2d6ca7;
+    padding: 50px;
+    margin: 0px auto;
+}
+
+.selectbox {
+    background-color: white;
+    width: 600px;
+    border: 15px solid #2d6ca7;
+    padding: 20px;
+    margin: 0px auto;
+}
+
+.selectbutton {
+    background-color: #00a1e0;
+    color: white;
+    padding: 14px 14px;
+    margin: 8px 0;
+    border: none;
+    cursor: pointer;
+    width: 100%;
+}
+
+
+button {
+    background-color: #00a1e0;
+    color: white;
+    padding: 14px 20px;
+    margin: 8px 0;
+    border: none;
+    cursor: pointer;
+    width: 100%;
+}
+
+button:hover {
+    opacity: 0.8;
+}
+
+.my-label {
+    font-weight: bold;
+    background-color: black;
+    color: white;
+    padding: 4px;
+    border-radius: 4px 4px 0 0;
+}
+
+.my-input-element {
+    background-color: green;
+    color: white;
+    border: none;
+    padding: 8px;
+    border-radius: 0 0 4px 4px;
+}
+
+.selectObj {
+    border: 2px solid #ccc;
+    border-radius: 4px;
+    font-family: Arial, sans-serif;
+    font-size: 16px;
+    color: #333;
+    background-color: #fff;
+    appearance: none;
+    height: 200px;
+    width: 500px;
+}
+
+
+.button-container {
+    margin-top: 20px;
+}
+
+.text-area-wrapper {
+    height: 200px;
+    /* set the height of the wrapper */
+}
+
+.input-text-area {
+    width: 100%;
+    /* set the width of the text area */
+    height: 100%;
+    /* set the height of the text area to match the wrapper */
+    border: 1px solid #ccc;
+    /* add a border for style */
+    padding: 10px;
+    /* add some padding for spacing */
+    box-sizing: border-box;
+    /* include padding in the height and width */
+}

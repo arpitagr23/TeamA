@@ -1,0 +1,94 @@
+<template>
+    <template if:true={isShowForm}>
+        <div class="box">
+            <div class="imgcontainer">
+                <img src={imgavatar2} alt="Avatar" class="avatar">
+            </div>
+            <div class="container">
+                <div class="slds-form-element slds-form-element_stacked">
+                    <label for="uname"><b>Username</b></label>
+                    <input data-id="uname" type="text" placeholder="Enter Username" name="uname"
+                        value="team1s@gmail.com" required />
+
+                    <label for="psw"><b>Password</b></label>
+                    <input data-id="psw" type="password" placeholder="Enter Password" name="psw" value="Welcome1234"
+                        required />
+
+                    <label for="security"><b>Security Token</b></label>
+                    <input data-id="sectoken" type="password" placeholder="Enter Security Token" name="sectoken"
+                        value="Yjgq5udyEkCz6klOMmfKSqT4H" required />
+
+                    <label for="url"><b>EndPoint URL</b></label>
+                    <input data-id="endpoint" type="url" placeholder="Enter End Point Url" name="endpoint"
+                        value="https://cittacoretechnologiesinc-5e-dev-ed.develop.my.salesforce.com/" required />
+
+                    <button type="submit" onclick={authlogin}>Login</button>
+                </div>
+            </div>
+        </div>
+    </template>
+    <template if:true={isLoggedIn}>
+        <div class="box">
+            <label for="Options"><b>Please Select An Option : </b></label>
+            <lightning-button variant="brand" label="Query" title="Make Query" onclick={makeQuery}
+                class="slds-m-left_x-small"></lightning-button>
+            <lightning-button variant="brand" label="Insert" title="Insert records" onclick={insertRecords}
+                class="slds-m-left_x-small"></lightning-button>
+            <lightning-button variant="brand" label="Update" title="Update records" onclick={updateRecords}
+                class="slds-m-left_x-small"></lightning-button>
+            <lightning-button variant="brand" label="Delete" title="Delete records" onclick={deleteRecords}
+                class="slds-m-left_x-small"></lightning-button>
+        </div>
+    </template>
+    <template if:true={isQuery}>
+        <div class="selectbox">
+            <div class="selectcontainer">
+                <label for="Options"><b>Select An Object:</b></label>
+                <div>
+                    <select class="selectObj" size=5 onchange={selectObject}>
+                        <template for:each={listOfObjects} for:item="value">
+                            <option key={value} value={value}>{value}</option>
+                        </template>
+                    </select>
+                    <div class="button-container">
+                        <button class="selectbutton" type="submit" onclick={generateFields}>Show Fields</button>
+                    </div>
+                </div>
+                <div if:true={isShowFields}>
+                    <select multiple class="selectObj" size=5 onchange={selectFields}>
+                        <template for:each={listOfFields} for:item="field">
+                            <option key={field} value={field}>{field}</option>
+                        </template>
+                    </select>
+                    <div class="button-container">
+                        <button class="selectbutton" type="submit" onclick={generateQuery}>Generate Query</button>
+                    </div>
+                </div>
+                <div if:true={showQuery} class="text-area-wrapper">
+                    <textarea class="input-text-area" name="query">{finalQuery}</textarea>
+                </div>
+            </div>
+        </div>
+    </template>
+    <template if:true={isInsert}>
+        <div class="selectbox">
+            <div class="selectcontainer">
+                <label for="Options"><b>Select An Object:</b></label>
+                <div>
+                    <select class="selectObj" size=5 onchange={selectObject}>
+                        <template for:each={listOfObjects} for:item="value">
+                            <option key={value} value={value}>{value}</option>
+                        </template>
+                    </select>
+                    <div>
+                        <label for="file-input">Select a CSV file:</label>
+                        <input type="file" onchange={handleFileSelect} accept=".csv" />
+                    </div>
+                    <div class="button-container">
+                        <button class="selectbutton" type="submit" onclick={parseCSV}>Map Fields</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </template>
+</template>
