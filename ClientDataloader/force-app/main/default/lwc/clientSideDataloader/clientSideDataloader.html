@@ -80,24 +80,21 @@
                             <option key={value} value={value}>{value}</option>
                         </template>
                     </select>
-                    <div>
+                    <div class="selectcontainertwo">
                         <label for="file-input">Select a CSV file:</label>
                         <input type="file" onchange={handleFileSelect} accept=".csv" />
                     </div>
-                    <div class="button-container">
-                        <button class="selectbutton" type="submit" onclick={mapFields}>Map Fields</button>
+                    <div if:true={isFileSelected} class="selectcontainertwo">
+                        <label for="file-input">Columns Names Present in CSV file</label>
+                        <select class="selectObj" size=5 onchange={selectObject}>
+                            <template for:each={columnNamesFromCSV} for:item="value">
+                                <option key={value} value={value}>{value}</option>
+                            </template>
+                        </select>
                     </div>
+                    <!--button class="selectbutton" type="submit" onclick={autoMapFields}>Auto Map Fields</button-->
+                    <button class="selectbutton" type="submit" onclick={insertRecordsFromCSV}>Insert Records</button>
                 </div>
-                <div class="div1" ondrop={handleDrop} ondragover={handleDragOver}>
-                </div>
-                <ul>
-                    <template for:each={listOfFields} for:item="item">
-                        <li key={item.id} draggable={isDraggable} ondragstart={handleDragStart}
-                            ondragover={handleDragOver} ondragend={handleDragEnd} data-item={item.id}>
-                            {item.value}
-                        </li>
-                    </template>
-                </ul>
             </div>
         </div>
     </template>

@@ -4,15 +4,15 @@ import doCallout from '@salesforce/apex/ClientDataloaderServerSide.doCallout'
 import getObjectList from '@salesforce/apex/ClientDataloaderServerSide.getObjectList'
 import { ShowToastEvent } from 'lightning/platformShowToastEvent';
 import fieldsList from '@salesforce/apex/ClientDataloaderServerSide.fieldsList'
+import insertRecordsFromCSV from '@salesforce/apex/ClientDataloaderServerSide.insertRecordsFromCSV';
 
 export default class ClientSideDataloader extends LightningElement {
 
     imgavatar2 = img_avatar2;
-    accessToken; endpoint; sObject; fileDetails; fieldFromCSV; myMap;
+    accessToken; endpoint; sObject; fileDetails; myMap; columnNamesFromCSV; autoMappedFields; csvString;
     finalQuery = '';
     listOfObjects = []; listOfFields = []; selectedFields = []; mapData = [];
-    isLoggedIn = false; isShowForm = true; isQuery = false; isShowFields = false; showQuery = false; isInsert = false;
-    draggedField = null;
+    isLoggedIn = false; isShowForm = true; isQuery = false; isShowFields = false; showQuery = false; isInsert = false; isFileSelected = false; isAutoMappedOn = false;
 
     authlogin(event) {
         let username = this.template.querySelector('[data-id="uname"]').value;
@@ -20,6 +20,14 @@ export default class ClientSideDataloader extends LightningElement {
         let sectoken = this.template.querySelector('[data-id="sectoken"]').value;
         this.endpoint = this.template.querySelector('[data-id="endpoint"]').value;
 
+        if ((this.endpoint.endsWith('/'))) {
+            this.endpoint = this.endpoint;
+        }
+        else {
+            this.endpoint = this.endpoint + '/';
+        }
+
+        console.log(this.endpoint);
         doCallout({ username: username, password: password, sectoken: sectoken, endpoint: this.endpoint }).then((result) => {
             this.accessToken = result;
             this.dispatchEvent(
@@ -108,7 +116,6 @@ export default class ClientSideDataloader extends LightningElement {
 
     handleFileSelect(event) {
         const file = event.target.files[0];
-
         if (file) {
             const reader = new FileReader();
 
@@ -117,8 +124,6 @@ export default class ClientSideDataloader extends LightningElement {
 
                 const rows = fileContents.split('\n').map(row => row.trim());
                 const headers = rows[0].trim().split(',');
-                let res = headers.map(item => ({ 'value': item, 'label': item }));
-                this.fieldFromCSV = headers;
 
                 let data = rows.slice(1).filter(row => row !== ''); // remove empty rows
 
@@ -139,15 +144,16 @@ export default class ClientSideDataloader extends LightningElement {
                         return obj;
                     }, {});
                 });
-
                 this.fileContents = data;
                 this.fileDetails = this.fileContents;
+                this.columnNamesFromCSV = headers;
+                this.isFileSelected = true;
             };
             reader.readAsText(file);
         }
     }
 
-    mapFields() {
+    showFields() {
         fieldsList({ accessToken: this.accessToken, endpoint: this.endpoint, objName: this.sObject }).then((result) => {
             this.listOfFields = [];
             let res = result.map(item => ({ 'value': item, 'label': item }));
@@ -157,48 +163,28 @@ export default class ClientSideDataloader extends LightningElement {
         })
     }
 
-    isDraggable = true;
-
-    handleDragStart(event) {
-        // Set the data to be transferred
-        event.dataTransfer.setData('text/plain', event.target.dataset.id);
-        const val = event.target.dataset.id;
-        console.log(val);
-        // Set the draggable property to false to prevent dragging more than one item at a time
-        this.isDraggable = false;
+    handleChange(event) {
+        // Get the list of the "value" attribute on all the selected options
+        const selectedOptionsList = event.detail.value;
+        console.log(`Options selected: ${selectedOptionsList}`);
     }
 
-    handleDragOver(event) {
-        // Prevent default to allow drop
-        event.preventDefault();
-    }
+    insertRecordsFromCSV() {
+        insertRecordsFromCSV({ accessToken: this.accessToken, endPoint: this.endpoint, objName: this.sObject, fileDetails: this.fileDetails }).then((result) => {
+            this.csvString = result;
+            const link = document.createElement('a');
+            link.setAttribute('href', 'data:text/csv;charset=utf-8,' + encodeURIComponent(result));
+            link.setAttribute('download', 'myFile.csv');
+            //link.href = csvUrl;
+            //link.download = 'myFile.csv';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
 
-    handleDragEnd(event) {
-        // Set the draggable property back to true after the drag is complete
-        this.isDraggable = true;
-    }
+            URL.revokeObjectURL(csvUrl);
+        }).catch(error => {
 
-    handleDragOver(event) {
-        // Prevent default to allow drop
-        event.preventDefault();
-    }
+        })
 
-    handleDrop(event) {
-        // Prevent default to allow drop
-        event.preventDefault();
-        // Get the data that was transferred
-        const data = event.dataTransfer.getData('item_id');
-        console.log(data);
-      
-        // Find the source element by using the event target instead of querySelector
-        const sourceElement = event.target;
-        // Find the target element
-        const targetElement = event.currentTarget;
-        console.log(targetElement);
-      
-        // Move the source element to the target element
-        targetElement.appendChild(sourceElement);
-        console.log(targetElement);
     }
-
 }

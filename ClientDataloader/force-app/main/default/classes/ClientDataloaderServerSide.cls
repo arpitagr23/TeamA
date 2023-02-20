@@ -105,11 +105,8 @@ public with sharing class ClientDataloaderServerSide {
         return fieldList;
     }
 
-    /*
     @AuraEnabled(cacheable=true)
-    public static Map<String, List<String>> fieldsDML(String accessToken, String endpoint, String objName)
-    {
-        Map<String, List<String>>  fieldList = new Map<String, List<String>>();
+    public static String insertRecordsFromCSV(String accessToken, String endPoint, String objName, List<Object> fileDetails){
         String endpointUrl = endpoint+'services/data/v56.0/sobjects/' + objName + '/describe/';
         HttpRequest getRequest = new HttpRequest();
         getRequest.setHeader('Content-Type', 'application/json');
@@ -122,26 +119,95 @@ public with sharing class ClientDataloaderServerSide {
         initialResponse = Send.send(getRequest);
         Map<String,Object> getInfo = (Map<String,Object>)Json.deserializeUntyped(initialResponse.getBody());
         List<Object> fieldInfo = (List<Object>)getInfo.get('fields');
-        List<String> fieldNames = new List<String>();
-        List<String> fieldLabels = new List<String>();
-        List<String> fieldTypes = new List<String>();
-        for(integer i = 0;i<fieldInfo.size(); i++)
-        {
-            
-            Map<String,Object> fields = (Map<String,Object>)fieldInfo.get(i);
-            String fieldName = String.valueOf(fields.get('name'));
-            String fieldLabel = String.valueOf(fields.get('label'));
-            String fieldType = String.valueOf(fields.get('type'));
-            fieldNames.add(fieldName);
-            fieldLabels.add(fieldLabel);
-            fieldTypes.add(fieldType);
+        List<Map<String, String>> valueOfRecords = new List<Map<String, String>>();
+        for(integer i=0;i<fileDetails.size();i++){ 
+            Map<Object, Object> recordValues = (Map<Object, Object>)fileDetails.get(i);
+            Map<String, String> autoMatchedFields = new Map<String, String>();
+            for(integer j = 0;j<fieldInfo.size(); j++)
+            {
+                Map<String,Object> fieldNames = (Map<String,Object>)fieldInfo.get(j);
+                String fieldName = String.valueOf(fieldNames.get('name'));
+                String labelName = String.valueOf(fieldNames.get('label'));
+
+                if(recordValues.containsKey(fieldNames.get('name'))){
+                    String valueOfRecord = String.valueOf(recordValues.get(fieldNames.get('name')));
+                    autoMatchedFields.put(fieldName, valueOfRecord);
+                }
+                else if(recordValues.containsKey(fieldNames.get('label'))){
+                    String valueOfRecord = String.valueOf(recordValues.get(fieldNames.get('label')));
+                    autoMatchedFields.put(fieldName, valueOfRecord);
+                }
+            }
+            valueOfRecords.add(autoMatchedFields);
         }
-        fieldList.put('Name', fieldNames);
-        fieldList.put('Label',fieldLabels);
-        fieldList.put('Type', fieldTypes);
-        System.debug(fieldList);
-        return fieldList;
+
+        List<Map<String, Object>> newList = new List<Map<String, Object>>();
+        for (Integer i = 0; i < valueOfRecords.size(); i++) {
+            Map<String, String> mapValueInList = valueOfRecords[i];
+            Map<String, Object> newMap = new Map<String, Object>{
+                'attributes' => new Map<String, Object>{'type' => objName, 'referenceId' => objName + i}
+            };
+
+            for (String key : mapValueInList.keySet()) {
+                newMap.put(key, mapValueInList.get(key));
+            }            
+            newList.add(newMap);
+        }
+
+        Map<String, Object> jsonMap = new Map<String, Object>{
+            'allOrNone' => false,
+            'records' => newList
+        };
+
+        String jsonString = JSON.serialize(jsonMap);
+        String newEndpointUrl = endpoint+'services/data/v56.0/composite/sobjects';
+        HttpRequest postRequest = new HttpRequest();
+        postRequest.setHeader('Content-Type', 'application/json');
+        postRequest.setHeader('Authorization', 'Bearer '+ accessToken);
+        postRequest.setMethod('POST');
+        postRequest.setBody(jsonString);
+        postRequest.setEndpoint(newEndpointUrl);
+
+        Http sendReq = new Http();
+        HttpResponse response = new HttpResponse();
+        response = sendReq.send(postRequest);
+        List<Object> getStatusReport = (List<Object>)Json.deserializeUntyped(response.getBody());
+        List<String> statusMessageList = new List<String>();
+        for(integer i = 0 ; i<getStatusReport.size(); i++){
+            Map<String, Object> statusMessages = (Map<String, Object>)getStatusReport.get(i);
+            String successOrFailure = String.valueOf(statusMessages.get('success'));
+            if(successOrFailure.equalsIgnoreCase('true')){
+                String Id = String.valueOf(statusMessages.get('id'));
+                statusMessageList.add(Id);
+            }
+            else{
+                List<Object> errorList = (List<Object>)statusMessages.get('errors');
+                Map<String, Object> errorMap = (Map<String, Object>)errorList.get(0);
+                statusMessageList.add(String.valueOf(errorMap.get('message')));
+            }
+        }    
+        
+        List<String> columnNamesForStatusFile = new List<String>();
+        Map<String, String> recordValues = valueOfRecords.get(0);
+        for(Object recordKey : recordValues.keySet()){
+            columnNamesForStatusFile.add(String.valueOf(recordKey));
+        }
+        columnNamesForStatusFile.add('Message');
+
+        List<String> csvRows = new List<String>{String.join(columnNamesForStatusFile, ',')};
+        for(Integer i = 0; i < valueOfRecords.size(); i++) {
+            Map<String, String> row = valueOfRecords[i];
+            List<String> csvRow = new List<String>();
+            for(String columnName : columnNamesForStatusFile) {
+                if(columnName == 'Message') {
+                    csvRow.add(statusMessageList[i]); // add message value to Messages column
+                } else {
+                    csvRow.add(row.get(columnName));
+                }
+            }
+            csvRows.add(String.join(csvRow, ','));
+        }
+        String csvString = String.join(csvRows, '\n');
+        return csvString;
     }
-    */
-    
 }
