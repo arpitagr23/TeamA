@@ -106,7 +106,9 @@ public with sharing class ClientDataloaderServerSide {
     }
 
     @AuraEnabled(cacheable=true)
-    public static String insertRecordsFromCSV(String accessToken, String endPoint, String objName, List<Object> fileDetails){
+    public static String performDmlOperationsFromCSV(String accessToken, String endPoint, String objName, List<Object> fileDetails, Boolean isInsert, Boolean isUpdate){
+        System.debug(isInsert);
+        System.debug(isUpdate);
         String endpointUrl = endpoint+'services/data/v56.0/sobjects/' + objName + '/describe/';
         HttpRequest getRequest = new HttpRequest();
         getRequest.setHeader('Content-Type', 'application/json');
@@ -120,24 +122,37 @@ public with sharing class ClientDataloaderServerSide {
         Map<String,Object> getInfo = (Map<String,Object>)Json.deserializeUntyped(initialResponse.getBody());
         List<Object> fieldInfo = (List<Object>)getInfo.get('fields');
         List<Map<String, String>> valueOfRecords = new List<Map<String, String>>();
+        List<Map<String, String>> detailsOfFile = new List<Map<String, String>>();
         for(integer i=0;i<fileDetails.size();i++){ 
             Map<Object, Object> recordValues = (Map<Object, Object>)fileDetails.get(i);
+            Map<String, String> autoMatchedFields = new Map<String, String>();
+            for(Object recordKey : recordValues.keySet()){
+                String fname = String.valueOf(recordKey).toUpperCase();
+                String value = String.valueOf(recordValues.get(recordKey));
+                autoMatchedFields.put(fname,value);
+            }
+            detailsOfFile.add(autoMatchedFields);
+        }
+
+        for(integer i=0;i<detailsOfFile.size();i++){ 
+            Map<String, String> recordValues = (Map<String, String>)detailsOfFile.get(i);
             Map<String, String> autoMatchedFields = new Map<String, String>();
             for(integer j = 0;j<fieldInfo.size(); j++)
             {
                 Map<String,Object> fieldNames = (Map<String,Object>)fieldInfo.get(j);
-                String fieldName = String.valueOf(fieldNames.get('name'));
-                String labelName = String.valueOf(fieldNames.get('label'));
+                String fieldName = String.valueOf(fieldNames.get('name')).toUpperCase();
+                String labelName = String.valueOf(fieldNames.get('label')).toUpperCase();
 
-                if(recordValues.containsKey(fieldNames.get('name'))){
-                    String valueOfRecord = String.valueOf(recordValues.get(fieldNames.get('name')));
+                if(recordValues.containsKey(fieldName)){
+                    String valueOfRecord = String.valueOf(recordValues.get(fieldName));
                     autoMatchedFields.put(fieldName, valueOfRecord);
                 }
-                else if(recordValues.containsKey(fieldNames.get('label'))){
-                    String valueOfRecord = String.valueOf(recordValues.get(fieldNames.get('label')));
+                else if(recordValues.containsKey(labelName)){
+                    String valueOfRecord = String.valueOf(recordValues.get(labelName));
                     autoMatchedFields.put(fieldName, valueOfRecord);
                 }
             }
+            System.debug(autoMatchedFields);
             valueOfRecords.add(autoMatchedFields);
         }
 
@@ -164,7 +179,10 @@ public with sharing class ClientDataloaderServerSide {
         HttpRequest postRequest = new HttpRequest();
         postRequest.setHeader('Content-Type', 'application/json');
         postRequest.setHeader('Authorization', 'Bearer '+ accessToken);
-        postRequest.setMethod('POST');
+        if(isInsert)
+            postRequest.setMethod('POST');
+        else if(isUpdate)
+            postRequest.setMethod('PATCH');
         postRequest.setBody(jsonString);
         postRequest.setEndpoint(newEndpointUrl);
 
@@ -208,6 +226,108 @@ public with sharing class ClientDataloaderServerSide {
             csvRows.add(String.join(csvRow, ','));
         }
         String csvString = String.join(csvRows, '\n');
+        return csvString;
+    }
+
+
+    @AuraEnabled(cacheable=true)
+    public static String performDeleteFromCSV(String accessToken, String endPoint, String objName, List<Object> fileDetails){
+        String endpointUrl = endpoint+'services/data/v56.0/sobjects/' + objName + '/describe/';
+        HttpRequest getRequest = new HttpRequest();
+        getRequest.setHeader('Content-Type', 'application/json');
+        getRequest.setHeader('Authorization', 'Bearer '+ accessToken);
+        getRequest.setMethod('GET');
+        getRequest.setEndpoint(endpointUrl);
+
+        Http Send = new Http();
+        HttpResponse initialResponse = new HttpResponse();
+        initialResponse = Send.send(getRequest);
+        Map<String,Object> getInfo = (Map<String,Object>)Json.deserializeUntyped(initialResponse.getBody());
+        List<Object> fieldInfo = (List<Object>)getInfo.get('fields');
+        List<String> recordIds = new List<String>();
+        List<Map<String, String>> detailsOfFile = new List<Map<String, String>>();
+        for(integer i=0;i<fileDetails.size();i++){ 
+            Map<Object, Object> recordValues = (Map<Object, Object>)fileDetails.get(i);
+            Map<String, String> autoMatchedFields = new Map<String, String>();
+            for(Object recordKey : recordValues.keySet()){
+                String fname = String.valueOf(recordKey).toUpperCase();
+                String value = String.valueOf(recordValues.get(recordKey));
+                autoMatchedFields.put(fname,value);
+            }
+            detailsOfFile.add(autoMatchedFields);
+        }
+
+        for(integer i=0;i<detailsOfFile.size();i++){ 
+            Map<String, String> recordValues = (Map<String, String>)detailsOfFile.get(i);
+            String valueOfRecord;
+            for(integer j = 0;j<fieldInfo.size(); j++)
+            {
+                Map<String,Object> fieldNames = (Map<String,Object>)fieldInfo.get(j);
+                String fieldName = String.valueOf(fieldNames.get('name')).toUpperCase();
+                String labelName = String.valueOf(fieldNames.get('label')).toUpperCase();
+
+                if(recordValues.containsKey(fieldName) && fieldName.equalsIgnoreCase('Id')){
+                    valueOfRecord = String.valueOf(recordValues.get(fieldName));
+                }
+                else if(recordValues.containsKey(labelName) && labelName.equalsIgnoreCase('Id')){
+                    valueOfRecord = String.valueOf(recordValues.get(labelName));
+                }
+            }
+            recordIds.add(valueOfRecord);
+        }
+
+
+        String newEndpointUrl = endpoint+'services/data/v56.0/composite/sobjects?ids=';
+        for(integer i = 0; i<recordIds.size();i++){
+            newEndpointUrl += recordIds.get(i) + ',';
+        }
+
+        newEndpointUrl = newEndpointUrl.removeEnd(',');
+        newEndpointUrl += '&allOrNone=false';
+        HttpRequest postRequest = new HttpRequest();
+        postRequest.setHeader('Content-Type', 'application/json');
+        postRequest.setHeader('Authorization', 'Bearer '+ accessToken);
+        postRequest.setMethod('DELETE');
+        postRequest.setEndpoint(newEndpointUrl);
+
+        Http sendReq = new Http();
+        HttpResponse response = new HttpResponse();
+        response = sendReq.send(postRequest);
+        List<Object> getStatusReport = (List<Object>)Json.deserializeUntyped(response.getBody());
+        List<String> statusMessageList = new List<String>();
+        for(integer i = 0 ; i<getStatusReport.size(); i++){
+            Map<String, Object> statusMessages = (Map<String, Object>)getStatusReport.get(i);
+            String successOrFailure = String.valueOf(statusMessages.get('success'));
+            if(successOrFailure.equalsIgnoreCase('true')){
+                String Id = String.valueOf(statusMessages.get('id'));
+                statusMessageList.add(Id);
+            }
+            else{
+                List<Object> errorList = (List<Object>)statusMessages.get('errors');
+                Map<String, Object> errorMap = (Map<String, Object>)errorList.get(0);
+                statusMessageList.add(String.valueOf(errorMap.get('message')));
+            }
+        }    
+        
+        List<String> columnNamesForStatusFile = new List<String>();
+        columnNamesForStatusFile.add('Id');
+        columnNamesForStatusFile.add('Message');
+
+        List<String> csvRows = new List<String>{String.join(columnNamesForStatusFile, ',')};
+        for(Integer i = 0; i < recordIds.size(); i++) {
+            String row = recordIds[i];
+            List<String> csvRow = new List<String>();
+            for(String columnName : columnNamesForStatusFile) {
+                if(columnName == 'Message') {
+                    csvRow.add(statusMessageList[i]); // add message value to Messages column
+                } else {
+                    csvRow.add(row);
+                }
+            }
+            csvRows.add(String.join(csvRow, ','));
+        }
+        String csvString = String.join(csvRows, '\n');
+        System.debug(csvString);
         return csvString;
     }
 }

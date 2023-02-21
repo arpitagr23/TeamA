@@ -4,7 +4,9 @@ import doCallout from '@salesforce/apex/ClientDataloaderServerSide.doCallout'
 import getObjectList from '@salesforce/apex/ClientDataloaderServerSide.getObjectList'
 import { ShowToastEvent } from 'lightning/platformShowToastEvent';
 import fieldsList from '@salesforce/apex/ClientDataloaderServerSide.fieldsList'
-import insertRecordsFromCSV from '@salesforce/apex/ClientDataloaderServerSide.insertRecordsFromCSV';
+import performDmlOperationsFromCSV from '@salesforce/apex/ClientDataloaderServerSide.performDmlOperationsFromCSV';
+import performDeleteFromCSV from '@salesforce/apex/ClientDataloaderServerSide.performDeleteFromCSV';
+import SobjectType from '@salesforce/schema/RecordType.SobjectType';
 
 export default class ClientSideDataloader extends LightningElement {
 
@@ -12,7 +14,7 @@ export default class ClientSideDataloader extends LightningElement {
     accessToken; endpoint; sObject; fileDetails; myMap; columnNamesFromCSV; autoMappedFields; csvString;
     finalQuery = '';
     listOfObjects = []; listOfFields = []; selectedFields = []; mapData = [];
-    isLoggedIn = false; isShowForm = true; isQuery = false; isShowFields = false; showQuery = false; isInsert = false; isFileSelected = false; isAutoMappedOn = false;
+    isLoggedIn = false; isShowForm = true; isQuery = false; isShowFields = false; showQuery = false; isInsert = false; isFileSelected = false; isAutoMappedOn = false; isUpdate = false; isDelete = false;
 
     authlogin(event) {
         let username = this.template.querySelector('[data-id="uname"]').value;
@@ -108,6 +110,8 @@ export default class ClientSideDataloader extends LightningElement {
             this.isShowForm = false;
             this.isQuery = false;
             this.isInsert = true;
+            this.isUpdate = false;
+            this.isDelete = false;
             console.log(this.listOfObjects);
         }).catch(error => {
             console.log(error);
@@ -163,20 +167,47 @@ export default class ClientSideDataloader extends LightningElement {
         })
     }
 
-    handleChange(event) {
-        // Get the list of the "value" attribute on all the selected options
-        const selectedOptionsList = event.detail.value;
-        console.log(`Options selected: ${selectedOptionsList}`);
+    updateRecords() {
+        getObjectList({ accessToken: this.accessToken, endpoint: this.endpoint }).then((result) => {
+            this.listOfObjects = result;
+            this.isLoggedIn = false;
+            this.isShowForm = false;
+            this.isQuery = false;
+            this.isUpdate = true;
+            this.isInsert = false;
+            this.isDelete = false;
+            console.log(this.listOfObjects);
+        }).catch(error => {
+            console.log(error);
+        })
     }
 
-    insertRecordsFromCSV() {
-        insertRecordsFromCSV({ accessToken: this.accessToken, endPoint: this.endpoint, objName: this.sObject, fileDetails: this.fileDetails }).then((result) => {
+
+    deleteRecords() {
+        getObjectList({ accessToken: this.accessToken, endpoint: this.endpoint }).then((result) => {
+            this.listOfObjects = result;
+            this.isLoggedIn = false;
+            this.isShowForm = false;
+            this.isQuery = false;
+            this.isUpdate = false;
+            this.isInsert = false;
+            this.isDelete = true;
+            console.log(this.listOfObjects);
+        }).catch(error => {
+            console.log(error);
+        })
+    }
+
+    performDmlOperationsFromCSV() {
+        performDmlOperationsFromCSV({ accessToken: this.accessToken, endPoint: this.endpoint, objName: this.sObject, fileDetails: this.fileDetails, isInsert: this.isInsert, isUpdate: this.isUpdate }).then((result) => {
             this.csvString = result;
             const link = document.createElement('a');
             link.setAttribute('href', 'data:text/csv;charset=utf-8,' + encodeURIComponent(result));
-            link.setAttribute('download', 'myFile.csv');
-            //link.href = csvUrl;
-            //link.download = 'myFile.csv';
+            if (this.isInsert)
+                var file = this.sObject + 'InsertStatus' + '.csv';
+            else if (this.isUpdate)
+                var file = this.sObject + 'UpdateStatus' + '.csv';
+            link.setAttribute('download', file);
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);
@@ -185,6 +216,23 @@ export default class ClientSideDataloader extends LightningElement {
         }).catch(error => {
 
         })
+    }
 
+
+    performDeleteFromCSV() {
+        performDeleteFromCSV({ accessToken: this.accessToken, endPoint: this.endpoint, objName: this.sObject, fileDetails: this.fileDetails }).then((result) => {
+            this.csvString = result;
+            const link = document.createElement('a');
+            link.setAttribute('href', 'data:text/csv;charset=utf-8,' + encodeURIComponent(result));
+            var file = this.sObject + 'DeleteStatus' + '.csv';
+            link.setAttribute('download', file);
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+
+            URL.revokeObjectURL(csvUrl);
+        }).catch(error => {
+
+        })
     }
 }
