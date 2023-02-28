@@ -42,11 +42,10 @@ export default class ClientSideDataloader extends LightningElement {
             this.isLoggedIn = true;
             this.isShowForm = false;
         }).catch(error => {
-            let errorMessage = JSON.parse(error.body.message).message;
             this.dispatchEvent(
                 new ShowToastEvent({
                     title: 'Error',
-                    message: errorMessage,
+                    message: error.body.message,
                     variant: 'error',
                 }),
             );
@@ -54,7 +53,9 @@ export default class ClientSideDataloader extends LightningElement {
     }
 
     makeQuery() {
-        getObjectList({ accessToken: this.accessToken, endpoint: this.endpoint }).then((result) => {
+        getObjectList({
+            accessToken: this.accessToken, endpoint: this.endpoint
+        }).then((result) => {
             this.listOfObjects = result;
             this.isLoggedIn = false;
             this.isShowForm = false;

@@ -23,35 +23,22 @@ public with sharing class ClientDataloaderServerSide {
             '&Content-Type=application/json'
         );
         request.setEndpoint(endpoint+'services/oauth2/token');
-        try{
-            Http http = new Http();
-            HttpResponse response = http.send(request);
-            responseString = response.getBody();
-            System.debug(response.getStatusCode());
-            System.debug(responseString);
-            if(response.getStatusCode()==200){
-                Map<String, Object> authResult = (Map<String, Object>)JSON.deserializeUntyped(response.getBody());
-                acc = (String)authResult.get('access_token');
-                String instanceUrl = (String)authResult.get('instance_url');
-                instanceUrl = instanceUrl + '/';
-                if(!instanceUrl.equalsIgnoreCase(endpoint)){
-                    throw new CommonException('Endpoint Incorrect');
-                }
-            }
-            else{
-                throw new CommonException('Authentication Failure, Please Check Your Login Details');
+        Http http = new Http();
+        HttpResponse response = http.send(request);
+        responseString = response.getBody();
+        System.debug(response.getStatusCode());
+        System.debug(responseString);
+        if(response.getStatusCode()==200){
+            Map<String, Object> authResult = (Map<String, Object>)JSON.deserializeUntyped(response.getBody());
+            acc = (String)authResult.get('access_token');
+            String instanceUrl = (String)authResult.get('instance_url');
+            instanceUrl = instanceUrl + '/';
+            if(!instanceUrl.equalsIgnoreCase(endpoint)){
+                throw new CommonException('Endpoint does not match with the credentials');
             }
         }
-        catch(CommonException e){
-            Map<String, Object> error = new Map<String, Object>();
-            error.put('message', e.getMessage());
-            System.debug(error);
-            throw new AuraHandledException(JSON.serialize(error));
-        }
-        catch(Exception e){
-            Map<String, Object> error = new Map<String, Object>();
-            error.put('message', e.getMessage());
-            throw new AuraHandledException(JSON.serialize(error));
+        else{
+            throw new CommonException('Authentication Failure, Please Check Your Login Details');
         }
         return acc;
     }
