@@ -38,6 +38,9 @@
                 class="slds-m-left_x-small"></lightning-button>
             <lightning-button variant="brand" label="Delete" title="Delete records" onclick={deleteRecords}
                 class="slds-m-left_x-small"></lightning-button>
+            <div class="footer2">
+                <button class="cancel" onclick={logout}>Cancel</button>
+            </div>
         </div>
     </template>
     <template if:true={isQuery}>
@@ -50,20 +53,32 @@
                             <option key={value} value={value}>{value}</option>
                         </template>
                     </select>
-                    <div class="button-container">
-                        <button class="selectbutton" type="submit" onclick={generateFields}>Show Fields</button>
+                    <div class="slds-float_left">
+                        <lightning-button label="Previous" onclick={previousButton1}
+                            variant="outline-brand"></lightning-button>
+                    </div>
+                    <div class="slds-float_right">
+                        <lightning-button label="Show Fields" onclick={generateFields}
+                            variant="brand"></lightning-button>
                     </div>
                 </div>
+                <div class="createspacediv"></div>
                 <div if:true={isShowFields}>
                     <select multiple class="selectObj" size=5 onchange={selectFields}>
                         <template for:each={listOfFields} for:item="field">
                             <option key={field} value={field}>{field}</option>
                         </template>
                     </select>
-                    <div class="button-container">
-                        <button class="selectbutton" type="submit" onclick={generateQuery}>Generate Query</button>
+                    <div class="slds-float_left">
+                        <lightning-button label="Previous" onclick={previousButton2}
+                            variant="outline-brand"></lightning-button>
+                    </div>
+                    <div class="slds-float_right">
+                        <lightning-button label="Generate Query" onclick={generateQuery}
+                            variant="brand"></lightning-button>
                     </div>
                 </div>
+                <div class="createspacediv"></div>
                 <div if:true={showQuery} class="text-area-wrapper">
                     <textarea class="input-text-area" name="query">{finalQuery}</textarea>
                 </div>
@@ -81,20 +96,33 @@
                         </template>
                     </select>
                     <div class="selectcontainertwo">
-                        <label for="file-input">Select a CSV file:</label>
-                        <input type="file" onchange={handleFileSelect} accept=".csv" />
+                        <div class="file-upload">
+                            <input type="file" id="file" onchange={handleFileSelect} accept=".csv" />
+                            <label for="file" class="custom-file-upload">
+                                <span>Choose CSV file</span>
+                            </label>
+                            <p>{fileName}</p>
+                        </div>
                     </div>
+                    <div class="createspacediv2"></div>
                     <div if:true={isFileSelected} class="selectcontainertwo">
                         <label for="file-input">Columns Names Present in CSV file</label>
-                        <select class="selectObj" size=5 onchange={selectObject}>
+                        <select class="selectObj" size=5 disabled>
                             <template for:each={columnNamesFromCSV} for:item="value">
                                 <option key={value} value={value}>{value}</option>
                             </template>
                         </select>
                     </div>
                     <!--button class="selectbutton" type="submit" onclick={autoMapFields}>Auto Map Fields</button-->
-                    <button class="selectbutton" type="submit" onclick={performDmlOperationsFromCSV}>Insert
-                        Records</button>
+                    <div class="createspacediv2"></div>
+                    <div class="slds-float_left">
+                        <lightning-button label="Previous" onclick={previousButton3}
+                            variant="outline-brand"></lightning-button>
+                    </div>
+                    <div class="slds-float_right">
+                        <lightning-button label="Insert" onclick={performDmlOperationsFromCSV}
+                            variant="brand"></lightning-button>
+                    </div>
                 </div>
             </div>
         </div>
@@ -110,12 +138,12 @@
                         </template>
                     </select>
                     <div class="selectcontainertwo">
-                        <label for="file-input">Select a CSV file:</label>
+                        <label for="file-input">Select a CSV file: </label>
                         <input type="file" onchange={handleFileSelect} accept=".csv" />
                     </div>
                     <div if:true={isFileSelected} class="selectcontainertwo">
                         <label for="file-input">Columns Names Present in CSV file</label>
-                        <select class="selectObj" size=5>
+                        <select class="selectObj" size=5 disabled>
                             <template for:each={columnNamesFromCSV} for:item="value">
                                 <option key={value} value={value}>{value}</option>
                             </template>
@@ -139,12 +167,12 @@
                         </template>
                     </select>
                     <div class="selectcontainertwo">
-                        <label for="file-input">Select a CSV file:</label>
+                        <label for="file-input">Select a CSV file: </label>
                         <input type="file" onchange={handleFileSelect} accept=".csv" />
                     </div>
                     <div if:true={isFileSelected} class="selectcontainertwo">
                         <label for="file-input">Columns Names Present in CSV file</label>
-                        <select class="selectObj" size=5>
+                        <select class="selectObj" size=5 disabled>
                             <template for:each={columnNamesFromCSV} for:item="value">
                                 <option key={value} value={value}>{value}</option>
                             </template>

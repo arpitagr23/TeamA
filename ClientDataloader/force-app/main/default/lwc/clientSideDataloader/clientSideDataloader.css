@@ -1,14 +1,11 @@
-.container {
-    padding: 16px;
+.imgcontainer {
+    text-align: center;
+    margin: 12px 0 6px 0;
 }
 
-.selectcontainer {
-    padding: 2px;
-}
-
-.selectcontainertwo{
-    margin-top: 20px;
-    margin-bottom: 20px;
+img.avatar {
+    width: 20%;
+    border-radius: 50%;
 }
 
 input[type=text],
@@ -22,30 +19,100 @@ input[type=url] {
     box-sizing: border-box;
 }
 
-.imgcontainer {
-    text-align: center;
-    margin: 12px 0 6px 0;
+.my-input-element {
+    background-color: green;
+    color: white;
+    border: none;
+    padding: 8px;
+    border-radius: 0 0 4px 4px;
 }
 
-img.avatar {
-    width: 20%;
-    border-radius: 50%;
+.container {
+    padding: 16px;
 }
 
 .box {
     background-color: white;
-    width: 600px;
-    border: 15px solid #2d6ca7;
-    padding: 50px;
+    width: 550px;
+    border: 2px solid #4b83b7;
+    padding: 40px;
     margin: 0px auto;
+    position: relative;
+    /*cancel */
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+
 }
 
 .selectbox {
+    box-sizing: border-box;
     background-color: white;
     width: 600px;
-    border: 15px solid #2d6ca7;
+    border: 5px solid #2d6ca7;
     padding: 20px;
-    margin: 0px auto;
+    margin: 20px auto;
+}
+
+.selectcontainer {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    height: 100%;
+    /*margin: 0 auto;*/
+    padding: 25px;
+    box-sizing: border-box;
+    margin-bottom: 20px;
+
+}
+
+.selectObj {
+    border: 2px solid #ccc;
+    border-radius: 4px;
+    font-family: Arial, sans-serif;
+    font-size: 16px;
+    color: #333;
+    background-color: #fff;
+    appearance: none;
+    height: 200px;
+    width: 500px;
+    margin-bottom: 10px;
+
+}
+
+.button-container {
+    display: flex;
+    justify-content: space-between;
+    width: 100%;
+    margin-bottom: 20px;
+}
+
+
+/*.footer2 {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 1rem;
+}*/
+
+
+/*.previous {
+    display: inline-block;
+    font-size: 14px;
+    padding: 10px 20px;
+    background-color: rgb(50, 180, 236); 
+    border-radius: 10px;
+  
+}*/
+.cancel {
+    display: inline-block;
+    font-size: 14px;
+    padding: 10px 20px;
+    background-color: rgb(246, 67, 47);
+    /* Use a darker shade of red for the "cancel" button */
+    color: #fff;
+    border-radius: 10px;
 }
 
 .selectbutton {
@@ -56,6 +123,9 @@ img.avatar {
     border: none;
     cursor: pointer;
     width: 100%;
+    max-width: 150px;
+    /* optional, set a maximum width for the button */
+
 }
 
 
@@ -81,36 +151,6 @@ button:hover {
     border-radius: 4px 4px 0 0;
 }
 
-.my-input-element {
-    background-color: green;
-    color: white;
-    border: none;
-    padding: 8px;
-    border-radius: 0 0 4px 4px;
-}
-
-.selectObj {
-    border: 2px solid #ccc;
-    border-radius: 4px;
-    font-family: Arial, sans-serif;
-    font-size: 16px;
-    color: #333;
-    background-color: #fff;
-    appearance: none;
-    height: 200px;
-    width: 500px;
-}
-
-
-.button-container {
-    margin-top: 20px;
-}
-
-.text-area-wrapper {
-    height: 200px;
-    /* set the height of the wrapper */
-}
-
 .input-text-area {
     width: 100%;
     /* set the width of the text area */
@@ -120,13 +160,52 @@ button:hover {
     /* add a border for style */
     padding: 10px;
     /* add some padding for spacing */
+    font-weight: bold;
     box-sizing: border-box;
     /* include padding in the height and width */
 }
 
-.div1{
-    width: 350px;
-    height: 70px;
-    padding: 10px;
-    border: 1px solid black;
+.text-area-wrapper {
+    height: 200px;
+    /* set the height of the wrapper */
+    width: 100%;
+
+}
+
+.button-container {
+    display: flex;
+    justify-content: space-between;
+    width: 100%;
+    margin-bottom: 20px;
+    margin-right: 20px;
+}
+
+.createspacediv {
+    margin-bottom: 20px;
+}
+
+.createspacediv2 {
+    margin-bottom: 10px;
+}
+
+.file-upload input[type="file"] {
+    position: absolute;
+    left: -9999px;
+}
+
+.custom-file-upload {
+    border: 1px solid #ccc;
+    display: inline-block;
+    padding: 6px 12px;
+    cursor: pointer;
+}
+
+.custom-file-upload span {
+    font-weight: bold;
+}
+
+.file-upload p {
+    margin-top: 10px;
+    font-size: 14px;
+    font-weight: bold;
 }

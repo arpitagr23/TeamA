@@ -6,12 +6,11 @@ import { ShowToastEvent } from 'lightning/platformShowToastEvent';
 import fieldsList from '@salesforce/apex/ClientDataloaderServerSide.fieldsList'
 import performDmlOperationsFromCSV from '@salesforce/apex/ClientDataloaderServerSide.performDmlOperationsFromCSV';
 import performDeleteFromCSV from '@salesforce/apex/ClientDataloaderServerSide.performDeleteFromCSV';
-import SobjectType from '@salesforce/schema/RecordType.SobjectType';
 
 export default class ClientSideDataloader extends LightningElement {
 
     imgavatar2 = img_avatar2;
-    accessToken; endpoint; sObject; fileDetails; myMap; columnNamesFromCSV; autoMappedFields; csvString;
+    accessToken; endpoint; sObject; fileDetails; myMap; columnNamesFromCSV; autoMappedFields; csvString; fileName;
     finalQuery = '';
     listOfObjects = []; listOfFields = []; selectedFields = []; mapData = [];
     isLoggedIn = false; isShowForm = true; isQuery = false; isShowFields = false; showQuery = false; isInsert = false; isFileSelected = false; isAutoMappedOn = false; isUpdate = false; isDelete = false;
@@ -122,6 +121,7 @@ export default class ClientSideDataloader extends LightningElement {
     handleFileSelect(event) {
         const file = event.target.files[0];
         if (file) {
+            this.fileName = file.name;
             const reader = new FileReader();
 
             reader.onload = () => {
@@ -236,4 +236,35 @@ export default class ClientSideDataloader extends LightningElement {
 
         })
     }
+
+    logout() {
+        this.isLoggedIn = false;
+        this.isShowForm = true;
+        this.listOfObjects = [];
+        this.selectedFields = [];
+        this.finalQuery = '';
+        this.mapData = [];
+    }
+
+    previousButton1() {
+        this.isQuery = false;
+        this.isLoggedIn = true;
+        this.isShowFields = false;
+    }
+    previousButton2() {
+
+        this.isShowFields = false;
+        this.isQuery = true;
+        this.showQuery = false;
+    }
+
+
+    previousButton3() {
+        this.isLoggedIn = true;
+        this.isInsert = false;
+        this.isFileSelected = false;
+        this.fileName = '';
+
+    }
+
 }
