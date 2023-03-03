@@ -267,4 +267,21 @@ export default class ClientSideDataloader extends LightningElement {
 
     }
 
+    
+    previousButton4() {
+        this.isLoggedIn = true;
+        this.isUpdate = false;
+        this.isFileSelected = false;
+        this.fileName = '';
+
+    }
+
+    previousButton5() {
+        this.isLoggedIn = true;
+        this.isDelete = false;
+        this.isFileSelected = false;
+        this.fileName = '';
+
+    }
+
 }
